@@ -1,0 +1,22 @@
+# Render Blueprint — a static site, and nothing else.
+#
+# `npm run build` (tsc -b && vite build) writes the whole application into `dist/`: the HTML shell,
+# the stylesheet, the bundle and the self-hosted fonts. Render serves those files. There is no server
+# process to keep alive, no API, no database and no secret — the R-76 calculation runs in the browser.
+#
+# The rewrite sends every path to `index.html`, which is what a single-page application needs; the
+# header stops a browser from guessing the type of a file it was told about.
+services:
+  - type: web
+    name: niyam-r76-workbench
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

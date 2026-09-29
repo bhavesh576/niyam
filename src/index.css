@@ -1,0 +1,2580 @@
+
+/* ==========================================================================================
+   NIYAM · Range-Aware R-76 Test Engine — stylesheet
+
+   A laboratory workbench, not a product page. One rule governs everything below: the screen reads
+   like the paper a metrology engineer works from — quiet surfaces, thin rules, small type, numbers
+   in a monospace face, and colour used only to carry meaning.
+
+   The chrome is fixed and thin, so the work is what occupies the window:
+
+     header   48 px   navy, one row: name · what it is · standard · scope
+     tabs     40 px   white, the three work areas, the active one underlined in navy
+     body     the rest of the window, one split pane per work area
+     footer   28 px   one muted line, the one disclaimer that travels with every screen
+
+   Every work area is a split: what the tester enters on the left, what NIYAM resolved from it on the
+   right, each pane scrolling inside itself. Nothing important sits below the fold at 1280 × 720 —
+   the fields and Validate on the configuration screen; the observation grid and Evaluate on the test
+   screen, and after Evaluate the verdict; the verdict, the record and Generate report on the result
+   screen, with the document beside them.
+
+   Colour carries the four kinds of information on screen, and nothing else:
+
+     ENTERED     blue    what the tester typed
+     RESOLVED    teal    what the instrument's range model gave back
+     CALCULATED  navy    what A.4.4.3 computed from those
+     VERDICT     navy    the one legal outcome, PASS or FAIL
+
+   plus the three states of a comparison: pass (green), fail (red), not evaluated / not ready
+   (amber). Nothing is decorated: no gradients, no glow, no shadow except the paper, no motion beyond
+   an 80 ms colour change on hover, no radius larger than 6 px, no type larger than 18 px.
+
+   Type: Inter for prose and labels, JetBrains Mono for every number, symbol, clause and formula,
+   with tabular figures so columns of grams line up. Inputs are 32 px, table rows 22–36 px, labels
+   12 px, helper lines 11 px.
+   ========================================================================================== */
+:root {
+  /* surfaces */
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-alt: #f9fafb;
+  --surface-sunken: #fcfcfd;
+  --border: #e4e7ec;
+  --border-soft: #f2f4f7;
+  --border-strong: #d0d5dd;
+
+  /* ink */
+  --heading: #101828;
+  --body: #344054;
+  --muted: #667085;
+  --faint: #98a2b3;
+
+  /* brand and action */
+  --navy: #0b2540;
+  --navy-line: #1f3a5f;
+  --action: #1d4ed8;
+  --action-hover: #1a44c0;
+  --action-soft: #eff3fe;
+  --teal: #0f766e;
+  --teal-soft: #edf7f6;
+
+  /* states of a comparison */
+  --pass: #15803d;
+  --pass-bg: #edfbf1;
+  --pass-border: #b7e4c7;
+  --fail: #b91c1c;
+  --fail-bg: #fdf0ef;
+  --fail-border: #f0c6c2;
+  --warn: #b45309;
+  --warn-bg: #fef6e7;
+  --warn-border: #f3dcae;
+
+  /* categories of information */
+  --cat-entered: #1d4ed8;
+  --cat-resolved: #0f766e;
+  --cat-calculated: #0b2540;
+  --cat-verdict: #0b2540;
+
+  /* type */
+  --sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* metrics — the fixed chrome, and the fixed heights everything else is built from */
+  --topbar-h: 48px;
+  --tabs-h: 40px;
+  --footer-h: 28px;
+  --shell: 1280px;
+  --gutter: 20px;
+  --input-h: 32px;
+  --row-h: 22px;
+  --row-tall: 36px;
+  --radius: 6px;
+  --radius-sm: 4px;
+  /* The paper is the only thing on screen that casts a shadow. */
+  --shadow-paper: 0 1px 4px rgba(16, 24, 40, 0.08);
+  /* The A4 preview is the real 794 px document, scaled to the 360 px pane it sits in. */
+  --paper-zoom: 0.42;
+
+  color-scheme: light;
+  font-family: var(--sans);
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--body);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* The window is the frame: the chrome is fixed, the panes inside it scroll. */
+#root {
+  height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+dl,
+dd,
+dt,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Keyboard focus is always visible, and always the same: a 2 px action-blue outline. */
+:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 1px;
+}
+
+/* Every number, symbol, clause and formula. Tabular figures keep columns of grams aligned. */
+.numeric,
+.model-table,
+.trace,
+.report-facts,
+.detail-list,
+.instrument-strip,
+.clause-tag,
+.status-counts,
+.control-input,
+.control-unit,
+.control-select,
+.derived-value,
+.resolution-value,
+.readiness-detail,
+.issue-field,
+.evaluation-summary,
+.topbar-chip,
+.range-name,
+.calculation-table {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+
+/* ---------- application shell: 48 px header, the page, 28 px footer ---------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* One row, 48 px, navy: the name, one divider, what the tool is, then the two facts that scope this
+   build. Nothing in this bar acts on the evaluation. */
+.topbar {
+  flex: none;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--navy);
+  color: #ffffff;
+}
+
+.brand {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--navy-line);
+}
+
+.topbar-title {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.topbar-spacer {
+  flex: 1 1 auto;
+}
+
+.topbar-chip {
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--border-strong);
+  border: 1px solid var(--navy-line);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: flex;
+  flex-direction: column;
+}
+
+/* One line, and the one disclaimer that has to travel with every screen. The clauses the rules were
+   transcribed from are in section F of the document, not in the chrome. */
+.app-footer {
+  flex: none;
+  height: var(--footer-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ---------- the three work areas: one navigation, 40 px, the active one underlined ---------- */
+
+.view-switch {
+  flex: none;
+  height: var(--tabs-h);
+  display: flex;
+  align-items: stretch;
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* No pills and no cards: a tab is text, and the one that is open carries a 2 px navy rule under it,
+   sitting on the strip's own bottom rule. */
+.view-button {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 80ms ease, border-color 80ms ease;
+}
+
+.view-button:hover {
+  color: var(--body);
+}
+
+.view-button.is-active {
+  color: var(--navy);
+  font-weight: 600;
+  border-bottom-color: var(--navy);
+}
+
+/* ---------- the body of a work area, and the split every work area is built from ---------- */
+
+.page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  padding: 16px 0;
+}
+
+.split {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 16px;
+}
+
+/* Configuration: the form is the work, the resolved model is the reference beside it. */
+.split-config {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+}
+
+/* Digital weighing test: a fixed 420 px column of entries and the rest of the window for the result,
+   so evaluating an observation never moves the fields. */
+.split-test {
+  grid-template-columns: 420px minmax(0, 1fr);
+}
+
+/* Result and report: the result takes what it needs, the document is a fixed 360 px preview column. */
+.split-result {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+/* One pane only: an area that cannot be worked on yet says so across the whole width. */
+.split-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* A pane is a white card that owns its own scrolling: nothing inside one pane can push another pane
+   off the screen, and a pane's action row stays where it is while its body scrolls. */
+.pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+.pane-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-gutter: stable;
+}
+
+/* The two panes whose content is not wrapped in a body scroll themselves. The input pane keeps no
+   bottom padding of its own, so its action row can stick flush to the pane's bottom edge — Evaluate
+   stays on screen however long the observation grid becomes. */
+.pane-input,
+.pane-result {
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-gutter: stable;
+}
+
+.pane-input {
+  padding-bottom: 0;
+}
+
+/* `margin-top: auto` puts the row at the bottom of the pane while the pane has room, and sticky keeps
+   it there once the content is taller than the pane: Evaluate is on screen in both cases. */
+.pane-input > .pane-actions {
+  position: sticky;
+  bottom: 0;
+  margin: auto -16px 0;
+}
+
+.pane-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* The reference pane of the configuration area: the validation verdict, the normalized range model
+   and the two closed probes, in one scrolling column. */
+.pane-aside {
+  gap: 14px;
+  padding: 16px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.pane-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* The document pane: an A4 sheet, scaled to the column, on the workbench surface. */
+.pane-paper {
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--surface-alt);
+  scrollbar-gutter: stable;
+}
+
+.pane-paper .report-paper {
+  width: 794px;
+  max-width: none;
+  margin: 0 auto;
+  zoom: var(--paper-zoom);
+}
+
+/* One line above the sheet while it is a preview: the document is built from the evaluation on
+   screen, and `Generate report` is what stamps the time and unlocks printing. */
+.paper-caption {
+  margin: 0 0 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Before a document exists the pane holds an empty sheet of the same size — not a message styled like
+   a document — so nothing on the left moves when the report appears. */
+.paper-empty {
+  width: 100%;
+  aspect-ratio: 1 / 1.4142;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: var(--shadow-paper);
+}
+
+.paper-empty-line {
+  max-width: 26ch;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--faint);
+  text-align: center;
+}
+
+/* What a pane says before there is anything to show: one line, muted, and no fake table behind it. */
+.pane-empty {
+  padding: 20px 2px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.pane-aside > .pane-empty {
+  margin: auto;
+  max-width: 34ch;
+  text-align: center;
+  color: var(--faint);
+}
+
+/* The title of the area being worked in sits inside the body, and it is the largest type on screen. */
+.pane-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--heading);
+}
+
+.pane-subtitle {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Vertical rhythm inside a pane: 10 px between blocks. It is written first, so a block that sets its
+   own margins — a section head, a table, a disclosure — keeps them. */
+.pane-body > * + *,
+.pane-input > * + *,
+.pane-aside > * + * {
+  margin-top: 10px;
+}
+
+/* ---------- sections, and the four categories of information ---------- */
+
+.section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section + .section {
+  margin-top: 14px;
+}
+
+/* One row: the category kicker with its 3 × 10 px bar, the title, and the note that orients the
+   reader pushed to the right edge. A head is 20 px tall and never carries a paragraph. */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin: 14px 0 6px;
+}
+
+.section-head:first-child {
+  margin-top: 0;
+}
+
+.section-kicker {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.section-kicker::before {
+  content: '';
+  width: 3px;
+  height: 10px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.category-entered .section-kicker {
+  color: var(--cat-entered);
+}
+
+.category-resolved .section-kicker {
+  color: var(--cat-resolved);
+}
+
+.category-calculated .section-kicker {
+  color: var(--cat-calculated);
+}
+
+.category-verdict .section-kicker {
+  color: var(--cat-verdict);
+}
+
+.section-title {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.005em;
+  line-height: 1.3;
+  color: var(--heading);
+}
+
+.actions-note {
+  flex: none;
+  max-width: 62%;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--faint);
+  text-align: right;
+}
+
+/* A caption is the accessible name of a table, and the visible head above it says the same thing in
+   fewer words — so the caption is kept for assistive technology and taken out of the layout. */
+.model-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- buttons ---------- */
+
+.button {
+  appearance: none;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--input-h);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 80ms ease, border-color 80ms ease, color 80ms ease;
+}
+
+.button-primary {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #ffffff;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: #123257;
+  border-color: #123257;
+}
+
+/* The one action a screen exists for is 4 px taller and never narrower than 120 px. */
+.button-hero {
+  height: 36px;
+  min-width: 120px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.button-secondary,
+.button-ghost {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--body);
+}
+
+.button-secondary:hover:not(:disabled),
+.button-ghost:hover:not(:disabled) {
+  background: var(--surface-alt);
+  border-color: var(--faint);
+}
+
+/* Inside a table row: small enough that the row stays the height it is. */
+.button-quiet {
+  height: 22px;
+  padding: 0 7px;
+  font-size: 11px;
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.button-quiet:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--body);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* “→ field”: the only navigation inside a message, and it goes to the input it is about. */
+.goto-field {
+  height: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--action);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.goto-field:hover {
+  color: var(--action-hover);
+}
+
+.goto-field-spacer {
+  flex: none;
+  width: 4px;
+}
+
+/* ---------- forms: a 12 px label above a 32 px control, two cells per row ---------- */
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  min-width: 0;
+}
+
+/* The five observation quantities: the same pairs, a little tighter, because this is the screen the
+   tester works on most. */
+.observation-grid {
+  gap: 8px 12px;
+}
+
+.field-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.25;
+  color: var(--body);
+}
+
+.symbol {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.field-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.field-control {
+  min-width: 0;
+}
+
+.control-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.control-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--input-h);
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--heading);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color 80ms ease, box-shadow 80ms ease;
+}
+
+.control-input::placeholder {
+  color: var(--border-strong);
+}
+
+.control-input:hover:not(:disabled) {
+  border-color: var(--faint);
+}
+
+.control-input:focus {
+  border-color: var(--action);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--action-soft);
+}
+
+.control-input:disabled {
+  background: var(--surface-alt);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* The unit is a real selector, always visible, and it is part of the value: kg for the capacities of
+   the R-76 example, g for its intervals. */
+.control-unit,
+.control-select {
+  flex: none;
+  height: var(--input-h);
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--body);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.control-unit {
+  width: 52px;
+}
+
+.control-select {
+  width: 100%;
+}
+
+.control-unit:focus,
+.control-select:focus {
+  border-color: var(--action);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--action-soft);
+}
+
+/* A value the validator refused: red rule, tinted field, and the message under it. */
+.has-error .control-input,
+.has-error .control-unit,
+.has-error .control-select,
+.control-input[aria-invalid='true'] {
+  border-color: var(--fail);
+  background: var(--fail-bg);
+}
+
+.field-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.field-issue {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+/* A warning beside a field is amber, like every other state that does not stop the work. */
+.field-issue.warning .issue-message {
+  color: var(--warn);
+}
+
+.issue-source {
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
+.field-issue,
+.issue-message {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fail);
+}
+
+.issue-detail,
+.issue-source {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* The one helper block of a grid: a single 11 px line under the whole grid, never an essay under
+   every field. */
+.grid-helper {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.model-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.action-note {
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--faint);
+  text-align: right;
+}
+
+/* ---------- the partial weighing ranges table: entered columns and derived columns ---------- */
+
+.range-table {
+  margin-top: 4px;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* Range · Min derived · Max entered · e entered · n derived · remove. Rows are 36 px. */
+.range-head,
+.range-row {
+  display: grid;
+  grid-template-columns: 80px 84px minmax(0, 1fr) minmax(0, 1fr) 84px 24px;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.range-head {
+  height: 28px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.range-head > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Which columns are typed and which are derived is printed in the head itself. */
+.column-note {
+  margin-left: 3px;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.head-derived {
+  color: var(--teal);
+}
+
+.range-row {
+  height: var(--row-tall);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.range-row:last-of-type {
+  border-bottom: 0;
+}
+
+.range-row.has-error {
+  background: var(--fail-bg);
+}
+
+.range-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--heading);
+  white-space: nowrap;
+}
+
+.tag {
+  flex: none;
+  padding: 1px 4px;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--teal);
+  background: var(--teal-soft);
+  border: 1px solid #cfe6e3;
+  border-radius: 2px;
+}
+
+/* A derived cell is never an input: tinted, dotted rule, monospace, and titled with its source. */
+.range-derived {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  min-width: 0;
+  padding: 0 7px;
+  background: var(--surface-alt);
+  border: 1px dotted var(--border-strong);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.derived-value {
+  font-size: 11.5px;
+  color: var(--body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.range-n .derived-value {
+  font-size: 11px;
+  color: var(--teal);
+}
+
+.derived-empty {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.range-remove,
+.range-remove-spacer {
+  width: 22px;
+  height: 22px;
+  justify-self: end;
+}
+
+.range-remove {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 80ms ease, border-color 80ms ease;
+}
+
+.range-remove:hover {
+  color: var(--fail);
+  border-color: var(--fail-border);
+}
+
+.range-empty {
+  padding: 12px 10px;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.add-range {
+  margin-top: 10px;
+}
+
+/* ---------- tables ---------- */
+
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: var(--body);
+}
+
+.model-table th,
+.model-table td {
+  height: var(--row-h);
+  padding: 0 8px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.model-table thead th {
+  height: 26px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.model-table tbody tr:last-child th,
+.model-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.model-table th[scope='row'] {
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.model-table .numeric {
+  text-align: right;
+}
+
+/* Six columns in the narrower pane: the column heads wrap to two lines and the type drops to 11 px,
+   so the whole model is readable without scrolling. The box still scrolls if a window is narrower. */
+.range-model-table th,
+.range-model-table td {
+  height: 24px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.range-model-table thead th {
+  height: auto;
+  padding: 4px 6px;
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+/* A body cell holds one value: “2 kg”, “20 g → 2 kg”, “1 g”. Splitting “2 kg” over two lines reads
+   as two numbers, so the cells do not wrap; if a window is too narrow for the six columns, the box
+   scrolls sideways inside itself and the page does not. */
+.range-model-table tbody td {
+  white-space: nowrap;
+}
+
+.range-model-table th[scope='row'] {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* A wide table scrolls inside its own box instead of squeezing its columns or the page. */
+.table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  scrollbar-width: thin;
+}
+
+/* ---------- status banner: every state the application reports ---------- */
+
+/* One line where one line is enough: 40 px for a configuration verdict, at most 48 px for the verdict
+   of an evaluation. The word first, the comparison beside it, the counts at the right edge. */
+.status-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 7px 11px;
+  color: var(--body);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.status-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.status-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  background: var(--muted);
+  border-radius: 50%;
+}
+
+.status-word {
+  flex: none;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--heading);
+}
+
+/* The two legal outcomes, and only they, are set in the monospace face and upper case: PASS and FAIL
+   are results of a comparison, and they read the same on every screen and on paper. */
+.status-verdict {
+  display: flex;
+  align-items: baseline;
+  /* One line: the word, then the comparison beside it. It is the sentence the verdict rests on, and
+     a sentence split over six lines reads as six facts. Where a window is too narrow for it, the
+     comparison is clipped at the end rather than stacked, and the banner never widens the page. */
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.verdict-word {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.status-statement {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--body);
+}
+
+/* Only the verdict's comparison is held to one line: it is short, it is a formula, and a formula
+   split over six lines reads as six facts. A reason or a summary under a word still wraps normally,
+   because those are sentences a tester has to read in full. */
+.status-verdict .status-statement {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-meta {
+  flex: none;
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.status-counts {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Where the counts are a sentence they take the second line of the banner instead of its right edge:
+   at the right edge they are the widest thing in the row and they leave the verdict a few pixels
+   wide, which is what stacked PASS over |Ec| over = over 0.9 g. Two short lines, one 48 px block. */
+.status-banner.meta-line {
+  row-gap: 2px;
+  min-height: 48px;
+  padding: 6px 11px;
+}
+
+.status-banner.meta-line .status-meta {
+  flex: 1 0 100%;
+  margin-left: 0;
+  /* Past the mark (17 px) and the gap (9 px), so the counts start under the verdict word. */
+  padding-left: 26px;
+  text-align: left;
+}
+
+/* On its own line the counts have the width of the banner, which is enough at every window this
+   application supports; where it is not, they wrap at a space rather than being clipped. */
+.status-banner.meta-line .status-counts {
+  white-space: normal;
+}
+
+.tone-pass {
+  background: var(--pass-bg);
+  border-color: var(--pass-border);
+  border-left-color: var(--pass);
+}
+
+.tone-pass .status-mark {
+  background: var(--pass);
+}
+
+.tone-pass .status-word,
+.tone-pass .verdict-word {
+  color: var(--pass);
+}
+
+.tone-fail {
+  background: var(--fail-bg);
+  border-color: var(--fail-border);
+  border-left-color: var(--fail);
+}
+
+.tone-fail .status-mark {
+  background: var(--fail);
+}
+
+.tone-fail .status-word,
+.tone-fail .verdict-word {
+  color: var(--fail);
+}
+
+/* Not evaluated and not ready are first-class states: amber, and always with the real reason. Such a
+   banner carries more than one line, so it aligns to its first line rather than centring it. */
+.tone-warn {
+  align-items: flex-start;
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+  border-left-color: var(--warn);
+}
+
+.tone-warn .status-mark {
+  margin-top: 1px;
+  background: var(--warn);
+}
+
+.tone-warn .status-word {
+  color: var(--warn);
+}
+
+.tone-neutral {
+  background: var(--surface-alt);
+  border-color: var(--border);
+  border-left-color: var(--border-strong);
+}
+
+/* What a banner carries when the state is not a verdict: the reasons, and the way back to the work
+   area that has to happen first. */
+.not-ready-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 5px;
+}
+
+.not-ready-reason {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--body);
+}
+
+.not-ready-reason::before {
+  content: '· ';
+  color: var(--warn);
+}
+
+.status-banner .model-note {
+  margin-top: 5px;
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ---------- the instrument under test: one read-only line and three range chips ---------- */
+
+/* Read-only context, not a table: the strip says which instrument the observation is evaluated
+   against, and the chips carry the three partial weighing ranges, wrapping as the pane requires. */
+.instrument-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 9px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.strip-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--body);
+}
+
+.strip-label {
+  flex: none;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.strip-fact {
+  white-space: nowrap;
+}
+
+.strip-fact + .strip-fact::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--border-strong);
+}
+
+.strip-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.strip-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--body);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.strip-range-n {
+  font-weight: 700;
+  color: var(--teal);
+}
+
+.strip-sep {
+  color: var(--border-strong);
+}
+
+.strip-range-e {
+  color: var(--navy);
+}
+
+/* ---------- the two sides of a resolution: load decides the limit, indication decides e* ---------- */
+
+/* Side by side, 50/50, 22 px rows, and no prose inside them: e_L and e* are two different intervals
+   at a changeover, so they are printed as two chains and never as one “e”. */
+.resolution-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.resolution-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  /* A value that does not fit scrolls inside its own panel; the page never scrolls sideways. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.panel-load {
+  border-top: 2px solid var(--cat-resolved);
+}
+
+.panel-indication {
+  border-top: 2px solid var(--cat-calculated);
+}
+
+.resolution-panel-title {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-load .resolution-panel-title {
+  color: var(--cat-resolved);
+}
+
+.panel-indication .resolution-panel-title {
+  color: var(--cat-calculated);
+}
+
+.resolution-table th,
+.resolution-table td {
+  height: var(--row-h);
+  padding: 0 8px;
+  font-size: 11.5px;
+}
+
+.resolution-table th[scope='row'] {
+  width: 42%;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.resolution-value {
+  font-size: 11.5px;
+  color: var(--body);
+  /* “Range 1 (20 g → 2 kg)” is one range, not five words: it stays on one line. */
+  white-space: nowrap;
+}
+
+.resolution-row-strong th,
+.resolution-row-strong td {
+  background: var(--surface-alt);
+}
+
+.resolution-row-strong th[scope='row'] {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.resolution-mpe {
+  font-weight: 650;
+  color: var(--navy);
+}
+
+/* The one line that carries the whole transition: two ranges, two intervals. */
+.evaluation-summary {
+  margin-top: 2px;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--teal);
+  background: var(--teal-soft);
+  border: 1px solid #d3e8e5;
+  border-radius: 3px;
+}
+
+.scope-line {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------- the resolution probe of the configuration area ---------- */
+
+.diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.panel-subtitle {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.resolution-group > td {
+  height: 22px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.resolution-group:first-child > td {
+  border-top: 0;
+}
+
+.resolution-interval {
+  font-weight: 650;
+  color: var(--teal);
+}
+
+.resolution-qualifier {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.resolution-flag {
+  margin-left: 5px;
+  padding: 0 4px;
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.resolution-unresolved {
+  color: var(--warn);
+}
+
+.emphasis {
+  font-weight: 650;
+  color: var(--heading);
+}
+
+/* ---------- boundary probes: one tbody per changeover ---------- */
+
+.probe-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  scrollbar-width: thin;
+}
+
+.probe-table th,
+.probe-table td {
+  height: 24px;
+  padding: 0 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.probe-group + .probe-group > tr:first-child > th,
+.probe-group + .probe-group > tr:first-child > td {
+  border-top: 1px solid var(--border);
+}
+
+.probe-boundary {
+  width: 168px;
+  padding: 5px 8px !important;
+  vertical-align: top;
+  white-space: normal !important;
+  background: var(--surface-alt);
+}
+
+.probe-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--heading);
+}
+
+.probe-change {
+  display: block;
+  margin-top: 1px;
+  font-size: 10.5px;
+  color: var(--teal);
+}
+
+.probe-detail {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 30ch;
+}
+
+.probe-position {
+  color: var(--muted);
+}
+
+/* The row that sits exactly on the boundary — the one the whole probe exists to show. */
+.probe-at > td {
+  background: var(--warn-bg);
+}
+
+.probe-at .probe-position {
+  color: var(--warn);
+  font-weight: 650;
+}
+
+.probe-unresolved > td {
+  color: var(--warn);
+}
+
+.probe-apply {
+  height: 20px;
+  padding: 0 6px;
+}
+
+/* ---------- calculation table and trace ---------- */
+
+.calculation-table th,
+.calculation-table td {
+  height: 24px;
+  font-size: 11.5px;
+}
+
+.calculation-formula {
+  font-weight: 650;
+  color: var(--heading);
+  white-space: nowrap;
+}
+
+.calculation-result {
+  font-weight: 650;
+  color: var(--navy);
+}
+
+.calculation-clause {
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: normal;
+}
+
+/* Ten rows of 28 px: index, what the step did, the value it produced, the clause it rests on. */
+.trace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.trace-step {
+  display: grid;
+  grid-template-columns: 20px minmax(110px, 0.85fr) minmax(0, 1.5fr) auto;
+  gap: 4px 8px;
+  align-items: baseline;
+  min-height: 28px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 11.5px;
+}
+
+.trace-step:last-child {
+  border-bottom: 0;
+}
+
+.trace-index {
+  font-size: 10.5px;
+  color: var(--faint);
+  text-align: right;
+}
+
+.trace-label {
+  color: var(--muted);
+}
+
+.trace-value {
+  color: var(--heading);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.trace-clause {
+  justify-self: end;
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
+/* A step the calculation could not complete says so, in the amber of a not-evaluated state. */
+.trace-step.incomplete {
+  background: var(--warn-bg);
+}
+
+.trace-step.incomplete .trace-label,
+.trace-step.incomplete .trace-value {
+  color: var(--warn);
+}
+
+/* ---------- collapsible disclosures: closed by default, 28 px head ---------- */
+
+.collapsible {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.collapsible + .collapsible {
+  margin-top: 8px;
+}
+
+.collapsible-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 4px 9px;
+  cursor: pointer;
+  list-style: none;
+  background: var(--surface-alt);
+  transition: background-color 80ms ease;
+}
+
+.collapsible-head::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-head:hover {
+  background: var(--border-soft);
+}
+
+.collapsible-caret {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 4px solid var(--muted);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  transition: transform 80ms ease;
+}
+
+.collapsible[open] > .collapsible-head .collapsible-caret {
+  transform: rotate(90deg);
+}
+
+.collapsible-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.collapsible-note {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--faint);
+  text-align: right;
+}
+
+.collapsible-body {
+  padding: 9px;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- validation issues: the reason, the clause, and the field it belongs to ---------- */
+
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.issue-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 160px) minmax(0, 1fr) auto 54px;
+  gap: 3px 9px;
+  align-items: start;
+  padding: 6px 9px;
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-border);
+  border-left: 3px solid var(--fail);
+  border-radius: var(--radius-sm);
+}
+
+/* A warning does not invalidate the configuration, and it is never coloured like something that does. */
+.issue-row.warning {
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+  border-left-color: var(--warn);
+}
+
+.issue-row.warning .issue-message {
+  color: var(--warn);
+}
+
+/* The head of the issue list: the four columns an issue is printed in, named once. */
+.issue-head {
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--surface-alt);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.issue-field {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+
+.issue-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.issue-clause {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-self: end;
+}
+
+.issue-status {
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+/* ---------- clause tags: a reference is data, not decoration ---------- */
+
+.clause-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 17px;
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--navy);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.resolution-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.resolution-note {
+  position: relative;
+  padding-left: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.resolution-note::before {
+  content: '·';
+  position: absolute;
+  left: 1px;
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.reference-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trace-reference {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---------- the result record: four groups, two by two ---------- */
+
+.result-record {
+  gap: 10px;
+}
+
+/* Instrument · Observation · Resolved · Compliance: four cells, two by two. Each cell is at most
+   seven lines, wrapping rather than clipping, and at half the pane width the seven lines are short
+   enough for the verdict, the record and `Generate report` to stay above the fold together. The
+   group is coloured by the kind of information it holds, which is the colour the kickers use. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.detail-column {
+  min-width: 0;
+  padding: 7px 9px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-width: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.detail-column.category-entered {
+  border-top-color: var(--cat-entered);
+}
+
+.detail-column.category-resolved {
+  border-top-color: var(--cat-resolved);
+}
+
+.detail-column.category-verdict {
+  border-top-color: var(--cat-verdict);
+}
+
+.detail-kicker {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.detail-heading {
+  margin: 2px 0 6px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--heading);
+}
+
+/* One line per fact: the name at the left of the cell, its value at the right. Seven facts are then
+   seven lines — a name stacked over its value would make fourteen, and at two cells across the pane
+   that is what pushed `Generate report` below the fold. A value that is too long for its column
+   wraps inside the column; the line it belongs to stays the line it belongs to. */
+.detail-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.detail-list dt {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+
+.detail-list dd {
+  color: var(--heading);
+  /* Break at a space, and inside a token only when a token alone is wider than the column:
+     `anywhere` broke “Range 1 (20 g → 2 kg)” into single words. */
+  overflow-wrap: break-word;
+}
+
+.detail-list dd.is-pass {
+  color: var(--pass);
+  font-weight: 700;
+}
+
+.detail-list dd.is-fail {
+  color: var(--fail);
+  font-weight: 700;
+}
+
+/* ---------- the result table: one row, grouped headers, scrolls inside its own box ---------- */
+
+.result-table {
+  font-size: 11.5px;
+}
+
+.result-table th,
+.result-table td {
+  height: 26px;
+  padding: 0 8px;
+}
+
+/* The four parts of the evaluation, printed above the columns that belong to them. */
+.result-group {
+  padding: 3px 8px !important;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border) !important;
+  text-align: left !important;
+}
+
+.result-table thead tr:last-child th {
+  height: 24px;
+  font-size: 10px;
+}
+
+/* ---------- report readiness: six rows of 28 px ---------- */
+
+.readiness {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.readiness-check {
+  display: grid;
+  grid-template-columns: 16px 116px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 11.5px;
+}
+
+.readiness-check:last-child {
+  border-bottom: 0;
+}
+
+.readiness-mark {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--pass);
+}
+
+.readiness-label {
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.readiness-detail {
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+/* An open gate is amber, and it says what is missing — it is never shown as satisfied. */
+.readiness-check.missing {
+  background: var(--warn-bg);
+}
+
+.readiness-check.missing .readiness-mark {
+  color: var(--warn);
+}
+
+.readiness-check.missing .readiness-detail {
+  color: var(--warn);
+}
+
+/* ---------- the report document: an A4 technical record ---------- */
+
+/* 794 px is A4 at 96 dpi; the padding is the 15 mm margin a printed report carries. On screen the
+   paper sits on the workbench surface with a thin rule and a soft shadow, and nothing else. */
+.report-paper {
+  width: 794px;
+  max-width: 100%;
+  margin: 14px auto 0;
+  padding: 46px 52px 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: var(--shadow-paper);
+  color: var(--body);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.report-head {
+  border-bottom: 1px solid var(--heading);
+  padding-bottom: 10px;
+}
+
+.report-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.report-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--heading);
+  margin-top: 4px;
+}
+
+.report-kind {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.report-facts {
+  display: grid;
+  grid-template-columns: minmax(150px, 210px) minmax(0, 1fr);
+  gap: 2px 12px;
+  margin-top: 10px;
+}
+
+.report-facts dt {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 2px;
+}
+
+.report-facts dd {
+  font-size: 10.5px;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+
+.report-head .report-facts {
+  grid-template-columns: repeat(2, minmax(110px, 160px) minmax(0, 1fr));
+}
+
+.report-notice {
+  margin-top: 10px;
+  padding: 6px 9px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-sm);
+}
+
+.report-section {
+  margin-top: 18px;
+}
+
+.report-section-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--navy);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.report-subtitle {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--heading);
+  margin: 10px 0 5px;
+}
+
+.report-note {
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 92ch;
+  margin-bottom: 7px;
+}
+
+.report-point + .report-point {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dotted var(--border);
+}
+
+.report-chains dd {
+  font-size: 10px;
+}
+
+.report-trace {
+  margin-top: 10px;
+}
+
+.report-document .model-table {
+  font-size: 10px;
+}
+
+.report-document .model-table th[scope='col'] {
+  font-size: 8.5px;
+  padding: 4px 6px;
+}
+
+.report-document .model-table th[scope='row'],
+.report-document .model-table td {
+  padding: 3px 6px;
+}
+
+.report-document .resolution-notes {
+  gap: 3px;
+}
+
+.report-document .resolution-note {
+  font-size: 10px;
+}
+
+/* The verdict on paper: boxed, monospace, and the only strong colour in the document. */
+.report-document .verdict {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  margin-bottom: 9px;
+}
+
+.report-document .verdict-word {
+  font-size: 13px;
+}
+
+.report-document .verdict-statement {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--heading);
+}
+
+.verdict-pass {
+  background: var(--pass-bg);
+  border-color: var(--pass-border);
+  border-left-color: var(--pass);
+}
+
+.verdict-pass .verdict-word {
+  color: var(--pass);
+}
+
+.verdict-fail {
+  background: var(--fail-bg);
+  border-color: var(--fail-border);
+  border-left-color: var(--fail);
+}
+
+.verdict-fail .verdict-word {
+  color: var(--fail);
+}
+
+.report-references {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  counter-reset: reference;
+}
+
+.report-reference {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.5;
+  padding-left: 9px;
+  border-left: 2px solid var(--border);
+}
+
+.report-reference-citation {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.report-reference-quote {
+  color: var(--body);
+}
+
+.report-reference-status {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  color: var(--warn);
+}
+
+.report-foot {
+  margin-top: 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.report-foot-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+
+/* ---------- narrower windows: laptop, split screen, tablet ---------- */
+
+/* A laptop or a half-maximised window: the panes stay side by side and the fixed columns give a
+   little ground. The record is already two by two, so it does not change here. */
+@media (max-width: 1180px) {
+  .split-test {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
+
+  .split-result {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+/* A tablet in portrait, or a window too narrow for two panes: the split stacks, and the panes stop
+   owning their scrolling — the page scrolls, because there is no longer a fold to keep anything
+   above. Nothing is hidden by this: the same content, in one column. */
+@media (max-width: 1024px) {
+  #root,
+  .app {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .split-config,
+  .split-test,
+  .split-result {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-body {
+    display: block;
+    padding: 16px 0;
+  }
+
+  .split {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pane,
+  .pane-body,
+  .pane-input,
+  .pane-result,
+  .pane-aside,
+  .pane-paper {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .pane-input {
+    padding-bottom: 16px;
+  }
+
+  .pane-input > .pane-actions {
+    position: static;
+    bottom: auto;
+    margin: 14px 0 0;
+  }
+
+  .resolution-panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pane-paper .report-paper {
+    zoom: 0.55;
+  }
+}
+
+@media (max-width: 860px) {
+  .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The name and the scope of the build stay; the description of the tool gives way. */
+  .topbar-title,
+  .topbar-divider {
+    display: none;
+  }
+
+  .actions-note {
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 720px) {
+  .view-button {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .app-footer {
+    font-size: 11px;
+  }
+
+  .pane-actions {
+    flex-wrap: wrap;
+  }
+
+  .action-note {
+    margin-left: 0;
+    text-align: left;
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------- print: the document alone, on A4 portrait ---------- */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    font-size: 10pt;
+  }
+
+  #root,
+  .app,
+  .app-main,
+  .page-body,
+  .split,
+  .pane,
+  .pane-paper {
+    display: block;
+    height: auto;
+    min-height: 0;
+    max-width: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: #ffffff;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Application chrome, the work areas and everything that is not the document: screen only. The
+     result pane does not print either — the document is the record, and it carries the same numbers. */
+  .topbar,
+  .app-footer,
+  .view-switch,
+  .screen-only,
+  .pane-result-main {
+    display: none !important;
+  }
+
+  .pane-paper .report-paper {
+    zoom: 1;
+  }
+
+  .report-paper,
+  .report-document {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 9pt;
+    /* Keep the tinted verdict and the notices legible on paper as well as on screen. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-title {
+    font-size: 14pt;
+  }
+
+  .report-head,
+  .report-foot,
+  .report-section,
+  .report-point,
+  .verdict {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* A section heading never ends a page on its own. */
+  .report-section-title,
+  .report-subtitle {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Tables: the header repeats on every page, and a row is never split. */
+  .result-table,
+  .report-table,
+  .calculation-table {
+    min-width: 0;
+    font-size: 7.5pt;
+  }
+
+  .table-scroll {
+    overflow: visible;
+    border: none;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  .detail-column,
+  .report-reference {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-document .verdict-word {
+    font-size: 11pt;
+  }
+}
